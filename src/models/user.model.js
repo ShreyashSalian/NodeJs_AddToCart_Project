@@ -41,6 +41,11 @@ const userModel = new Schema(
       type: Date,
       allowNull: true,
     },
+    role: {
+      type: String,
+      enum: ["admin", "user", "moderator"], // Define your roles here
+      default: "user", // Default role
+    },
   },
   {
     timestamps: true,

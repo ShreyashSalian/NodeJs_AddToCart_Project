@@ -63,5 +63,8 @@ userRouter.post(
   validateApi,
   changePassword
 );
+// router.get('/admin', authorizeRole(['admin']), (req, res) => {
+//   res.send("Welcome Admin!");
+// });
 
 export default userRouter;
