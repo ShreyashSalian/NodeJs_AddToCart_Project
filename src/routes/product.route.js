@@ -3,7 +3,10 @@ import productValidator from "../validations/product.validation.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/product.middleware.js";
 import validateApi from "../middlewares/validator.js";
-import { addProduct } from "../controllers/product.controller.js";
+import {
+  addProduct,
+  listAllProducts,
+} from "../controllers/product.controller.js";
 
 const productRouter = express.Router();
 productRouter.post(
@@ -14,5 +17,6 @@ productRouter.post(
   validateApi,
   addProduct
 );
+productRouter.get("/", verifyUser, listAllProducts);
 
 export default productRouter;
