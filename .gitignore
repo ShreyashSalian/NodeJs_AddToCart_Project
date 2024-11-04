@@ -1,0 +1,12 @@
+node_modules/
+.cache
+public/
+public/productImages
+public/javascripts
+public/stylesheets
+public/assets/clientDocument
+public/assets/contactDocument
+**/.env
+.deployment
+.vscode/
+package-lock.json
