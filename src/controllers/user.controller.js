@@ -524,3 +524,137 @@ export const resetPassword = async (req, res) => {
     return res.status(500).json(responsePayload);
   }
 };
+export const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { userName } = req.params;
+  if (!userName?.trim()) {
+    const responsePayload = {
+      status: 404,
+      message: null,
+      data: null,
+      error: "No user found",
+    };
+    return res.status(404).json(responsePayload);
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        userName: userName?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channels",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscribes",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscriberCount: {
+          $size: "$subscribers",
+        },
+        channelSubscribeToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: {
+              $in: [req.user?._id, "$subscribers.subscribes"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        email: 1,
+        userName: 1,
+        subscriberCount: 1,
+        channelSubscribeToCount: 1,
+        isSubscribed: 1,
+      },
+    },
+  ]);
+
+  if (!channel?.length) {
+    const responsePayload = {
+      status: 400,
+      message: null,
+      data: user,
+      error: "Channel does not exist",
+    };
+    return res.status(200).json(responsePayload);
+  }
+  const responsePayload = {
+    status: 200,
+    message: "Channel details",
+    data: channel[0],
+    error: null,
+  };
+  return res.status(200).json(responsePayload);
+});
+
+//Use to the watch history details
+export const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "WatchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              foreignField: "_id",
+              localField: "owner",
+              as: "ownerDetails",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    userName: 1,
+                    email: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  const responsePayload = {
+    status: 200,
+    message: "Watch history",
+    data: user[0].watchHistory,
+    error: null,
+  };
+  return res.status(200).json(responsePayload);
+});
